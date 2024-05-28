@@ -1,0 +1,253 @@
+---
+title: "Base R Practice"
+author: "Eliza Norman"
+format: html
+editor: visual
+---
+
+# Task 1: Basic Vector Practice
+
+## 1.
+
+Creating vectors for pre- and post-treatment blood pressures
+
+```{r}
+pre_bp <- c(130, 128, 116, 124, 133, 134, 118, 126, 114, 127, 141, 138, 128, 
+            140, 137, 131, 120, 128, 139, 135)
+post_bp <- c(114, 98, 113, 99, 107, 116, 113, 111, 119, 117, 101, 119, 130, 122,
+             106, 106, 124, 102, 117, 113)
+```
+
+## 2.
+
+Giving subject names to each measurement
+
+```{r}
+patient <- paste("Subject", 1:20, sep = "_")
+
+names(pre_bp) <- patient
+pre_bp
+names(post_bp) <- patient
+post_bp
+```
+
+## 3.
+
+Calculating the change in blood pressure for each patient, saved in $bp\_change$ vector
+
+```{r}
+diff_bp <- (pre_bp - post_bp)
+diff_bp
+```
+
+## 4.
+
+Calculating the average decrease in blood pressure across all patients
+
+```{r}
+mean(diff_bp)
+```
+
+## 5.
+
+Returning which patients experienced a positive change in blood pressure due to trt
+
+```{r}
+pos_change <- which(diff_bp > 0)
+pos_change
+```
+
+## 6.
+
+Subset the data to only include patients whose blood pressures lowered due to trt
+
+```{r}
+pos_subset <- diff_bp[pos_change]
+pos_subset
+```
+
+## 7.
+
+Calculating the average decrease in blood pressure, only for patients whose blood pressure did decrease due to trt
+
+```{r}
+mean(pos_subset)
+```
+
+# Task 2: Basic Data Frame Practice
+
+## 1.
+
+Creating a data frame with for columns corresponding to the data from the previous task
+
+```{r}
+bp_df <- data.frame(patient, pre_bp, post_bp, diff_bp)
+head(bp_df)
+```
+
+## 2.
+
+Returning only the rows of the data frame where $diff\_bp$ is negative
+
+```{r}
+bp_df[bp_df$diff_bp < 0, ]
+```
+
+## 3.
+
+Adding a new column called $low\_post\_bp$ to the $bp\_diff$ data frame that is valued "TRUE" when the $post\_bp < 120$, and "FALSE" otherwise
+
+```{r}
+bp_df$low_post_bp <- c(bp_df$post_bp < 120)
+```
+
+## 4.
+
+Print out final data frame
+
+```{r}
+knitr::kable(bp_df)
+```
+
+# Task 3: List Practice
+
+## 1.
+
+Creating a data frame that is filled with the pre- and post-placebo trt blood pressures
+
+```{r}
+pre_placebo_bp <- c(138, 135, 147, 117, 152, 134, 114, 121, 131, 130)
+post_placebo_bp <- c(105, 136, 123, 130, 134, 143, 135, 139, 120, 124)
+
+placebo_patient <- paste("Placebo Subject", 1:10, sep = "_")
+
+names(pre_placebo_bp) <- placebo_patient
+names(post_placebo_bp) <- placebo_patient
+
+diff_placebo_bp <- (pre_placebo_bp - post_placebo_bp)
+placebo_bp_df <- data.frame(placebo_patient, pre_placebo_bp, post_placebo_bp, 
+                            diff_placebo_bp)
+placebo_bp_df$low_post_placebo_bp <- c(placebo_bp_df$post_placebo_bp < 120)
+knitr::kable(placebo_bp_df)
+```
+
+## 2.
+
+Creating and storing a list $all\_bp$ where the first element is the treatment blood pressure data, and the second element is the placebo blood pressure data.
+
+```{r}
+all_bp <- list(treatment = bp_df, placebo = placebo_bp_df)
+knitr::kable(all_bp)
+```
+
+## 3.
+
+Accessing the first list element "treatment" using \[ \], \[\[ \]\], and \$
+
+```{r}
+all_bp[1]
+all_bp[[1]]
+all_bp$treatment
+```
+
+## 4.
+
+By using the \[\[ \]\], I will access the second list element, placebo. Then using the \$, I can further access the $pre\_bp$ column of that placebo data frame, which I called "$pre\_placebo\_bp$"
+
+```{r}
+all_bp[[2]]$pre_placebo_bp
+```
+
+# Task 4: Control Flow Practice
+
+## 1.
+
+Creating a "$status$" column in each data frame of the list. This column categorizes post-treatment/post-placebo blood pressure in terms of severity.
+
+```{r}
+all_bp[[1]]$status <- character(20)
+all_bp[[2]]$status <- character(10)
+```
+
+## 2.
+
+Using a for loop to populate the status column for the non-placebo group according to these categories:
+
+optimal: $\;\;\;\;\;\leq 120$\
+borderline: $\;120 < bp \leq 130$\
+high: $\;\;\;\;\;\;\;\;\;\;> 130$
+
+```{r}
+for(i in seq_len(nrow(all_bp$treatment))){
+  if(all_bp$treatment[i, "post_bp"] <= 120){
+     all_bp$treatment[i, "status"] = "optimal"
+  } else if((all_bp$treatment[i, "post_bp"] > 120) & 
+            (all_bp$treatment[i, "post_bp"] <= 130)){
+      all_bp$treatment[i, "status"] = "borderline"
+    } else{
+         all_bp$treatment[i, "status"] = "high"
+
+  }
+    
+}
+all_bp$treatment
+```
+
+## 3.
+
+Using a for loop to populate the status column for the placebo group according to these categories:
+
+optimal: $\;\;\;\;\;\leq 120$\
+borderline: $\;120 < bp \leq 130$\
+high: $\;\;\;\;\;\;\;\;\;\;> 130$
+
+```{r}
+for(i in seq_len(nrow(all_bp$placebo))){
+  if(all_bp$placebo[i, "post_placebo_bp"] <= 120){
+     all_bp$placebo[i, "status"] = "optimal"
+  } else if((all_bp$placebo[i, "post_placebo_bp"] > 120) & (all_bp$placebo[i, "post_placebo_bp"] <= 130)){
+      all_bp$placebo[i, "status"] = "borderline"
+    } else{
+         all_bp$placebo[i, "status"] = "high"
+
+  }
+    
+}
+knitr::kable(all_bp$placebo)
+```
+
+# Task 5: Function Writing
+
+## 1.
+
+Creating the function under the given instructions
+
+```{r}
+# creating a function named stat_function that takes a 2-item list, as well as a statistic of the user's choice
+stat_function <- function(list, stat="mean"){
+# extracting the 'treatment' and 'placebo' data frames from the list input
+  treatment <- list$treatment
+  placebo <- list$placebo
+# load the input statistic as 'my_fun' to be used in the function
+  my_fun <- get(stat)
+# specify the base names of the new columns, according to which data frame and column being input
+  cols <- c("treatment_pre", "treatment_post", "treatment_diff", "placebo_pre", "placebo_post", "placebo_diff")
+# add '_' and then the name of the input statistic to the column name
+  full_names <- c(paste(cols, stat, sep="_"))
+# apply the user-input statistic to each column and store the results in a vector 'values'
+  values <- c(my_fun(treatment$pre), my_fun(treatment$post), my_fun(treatment$diff), my_fun(placebo$pre), my_fun(placebo$post), my_fun(placebo$diff))
+# assign the 'values' vector the full names of the form 'dataFrame_originalColumnName_stat'
+  names(values) <- full_names
+# return the 'values' vector, along with its names
+  return(values)
+}
+
+# apply the new function to the homework data with default stat input
+stat_function(all_bp)
+
+# apply the new function to the homework data using variance, standard deviation, minimum, and maximum
+stat_function(all_bp, stat="var")
+stat_function(all_bp, stat="sd")
+stat_function(all_bp, stat="min")
+stat_function(all_bp, stat="max")
+```
